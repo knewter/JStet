@@ -1,42 +1,423 @@
 
+void restartGame()
+{
+  field.field = field.create_field();
+  mode.change(0);
+  score.reset();
+  timer.reset();
+}
+
+function ScoreBoard(score)
+{
+  var self = this;
+  self.score = score;
+  self.start = 0;
+  self.turn = false;
+  self.title = function()
+  {
+    background(0,0,0)
+    PFont font = loadFont("monospace");
+    textFont(font,18);
+    text("HIGH SCORE LIST",250,50);
+  };
+  self.page = function()
+  {
+    text("Page: " + (this.start / 20),200,550);
+  };
+  self.instruction = function()
+  {
+    text("Instructions:",500,50);
+    text("n - new game",500,75);
+    text("k - next page",500,100);
+    text("j - previous page",500,125);
+  };
+  self.list = function()
+  {
+    data = score.network.getData();
+    y = 70;
+    limit = self.start + 20;
+    self.turn = true;
+    for (var i = self.start;i < limit;i++)
+    {
+      if (data.names[i] != "nothing")
+      {
+        text(data.names[i] + " : " + data.scores[i],250,y+= 20);
+      }
+      else
+      {
+        self.turn = false;
+        return;
+      }
+    };
+  };
+  self.turnPage = function()
+  {
+    if (self.turn == true)
+    {
+      self.start += 20;
+      if (self.start == 100)
+      {
+        self.start = 80;
+      }
+    }
+  };
+  self.previousPage = function()
+  {
+    if (self.start > 0)
+    {
+      self.start -= 20;
+    }
+  };
+  self.display = function()
+  {
+    self.title();
+    self.instruction();
+    self.list();
+    self.page();
+  };
+}
+
+
+
+function ScoreNetwork(score)
+{
+  var self = this;
+  self.ws = null;
+  self.data = null;
+  self.score = score;
+  self.initialize = function()
+  {
+    self.ws = new WebSocket('ws://localhost:7000');
+    self.ws.onmessage = function(event)
+    {
+      self.data = JSON.parse(event.data);
+      self.score.changeMinimum(self.getLimit());
+    };
+    self.ws.onclose = function()
+    {
+      console.log("Connection ended.");
+      console.log(timer.getSeconds() + " seconds has eclipsed.")
+    };
+  };
+  //Return the mininum score to submit score to database.
+  self.getLimit = function()
+  {
+    if (self.data.status == true)
+    {
+      return self.data.scores[99];
+    }
+    return false;
+  };
+  self.transmitScore = function(identifer)
+  {
+    var message = {
+      type = 0,
+      name = identifer,
+      points = self.score.points,
+    };
+    data = JSON.stringify(message);
+    self.ws.send(data);
+  };
+  self.getData = function()
+  {
+    return self.data;
+  };
+  self.sendAlive = function()
+  {
+    var message = {
+      type = 1
+    };
+    data = JSON.stringify(message);
+    self.ws.send(data);
+  }
+}
+function HighScore()
+{
+  var self = this;
+  self.name = "";
+  self.display = function()
+  {
+    background(0,0,0);
+    noFill();
+    rect(300,305,55,30);
+    text("You have beaten a score in the worldwide top 100 ranking.",100,250);
+    text("Please enter your 5 letters identifer.",200,275);
+    text("Your identifer: ",250,300);
+    text(self.name,300,325);
+  };
+  self.clean = function()
+  {
+    self.name = "";
+  }
+  self.addLetter = function(letter)
+  {
+    if (self.name.length != 5)
+    {
+      self.name += letter;
+    }
+  };
+  self.destroy = function()
+  {
+    if (self.name.length != 0)
+    {
+      self.name = self.name.substring(0,self.name.length - 1);
+    };
+  };
+  self.getName = function()
+  {
+    return self.name;
+  }
+}
+void enterScoreKey()
+{
+  switch(key)
+  {
+  case 97:
+    score_data.addLetter("a");
+    break;
+  case 98:
+    score_data.addLetter("b");
+    break;
+  case 99:
+    score_data.addLetter("c");
+    break;
+  case 100:
+    score_data.addLetter("d");
+    break;
+  case 101:
+    score_data.addLetter("e");
+    break;
+  case 102:
+    score_data.addLetter("f");
+    break;
+  case 103:
+    score_data.addLetter("g");
+    break;
+  case 104:
+    score_data.addLetter("h");
+    break;
+  case 105:
+    score_data.addLetter("i");
+    break;
+  case 106:
+    score_data.addLetter("j");
+    break;
+  case 107:
+    score_data.addLetter("k");
+    break;
+  case 108:
+    score_data.addLetter("l");
+    break;
+  case 109:
+    score_data.addLetter("m");
+    break;
+  case 110:
+    score_data.addLetter("n");
+    break;
+  case 111:
+    score_data.addLetter("o");
+    break;
+  case 112:
+    score_data.addLetter("p");
+    break;
+  case 113:
+    score_data.addLetter("q");
+    break;
+  case 114:
+    score_data.addLetter("r");
+    break;
+  case 115:
+    score_data.addLetter("s");
+    break;
+  case 116:
+    score_data.addLetter("t");
+    break;
+  case 117:
+    score_data.addLetter("u");
+    break;
+  case 118:
+    score_data.addLetter("v");
+    break;
+  case 119:
+    score_data.addLetter("w");
+    break;
+  case 120:
+    score_data.addLetter("x");
+    break;
+  case 121:
+    score_data.addLetter("y");
+    break;
+  case 122:
+    score_data.addLetter("z");
+    break;
+  //backspace
+  case 8:
+    score_data.destroy();
+    break;
+  case 13:
+    score.network.transmitScore(score_data.getName());
+    score_data.clean();
+    mode.change(2);
+    break;
+  }
+}
+void gameOverKey()
+{
+  if (key == 110)
+  {
+    restartGame();
+  }
+  else if(key == 100)
+  {
+    mode.change(2);
+  }
+}
+void keyPressed()
+{
+  switch(mode.status)
+  {
+  case 0:
+    gameKey();
+    break;
+  case 1:
+    gameOverKey();
+    break;
+  case 2:
+    scoreKey();
+    break;
+  case 3:
+    enterScoreKey();
+    break;
+  }
+}
+
+void scoreKey()
+{
+  switch(key)
+  {
+  //n is restart the game
+  case 110:
+    restartGame();
+    break;
+  //j, view previous page
+  case 106:
+    board.previousPage();
+    break;
+  //k, view next page
+  case 107:
+    board.turnPage();
+    break;
+  }
+}
+
+//Use the ASCII chart to figure out what keys respond to what integer
+
+
+void gameKey()
+{
+  switch(key)
+  {
+  //move right, d
+  case 100:
+    shape.move(20,0);
+    checkEvent(-20,0);
+    break;
+  //move down, s
+  case 115:
+    shape.move(0,20);
+    downEvent();
+    break;
+  //move left, a
+  case 97:
+    shape.move(-20,0);
+    checkEvent(20,0);
+    break;
+  //rotate, w
+  case 119:
+    shape.rotate();
+    if (checkEvent(0,0))
+    {
+      shape.rotate_backward();
+    }
+    break;
+  default:
+    console.log(key);
+    break;
+  }
+}
 function TimerAction()
 {
-  this.speed = 1000;
-  this.cycle = 0;
-  this.time = new Date();
-  this.tickCycle = function()
+  self = this;
+  self.eclipsed = 0;
+  self.speed = 1000;
+  self.actions = [];
+  self.cycle = 0;
+  self.time = new Date();
+  self.addAction = function(name , cycle)
   {
-    this.cycle++;
-    if (this.cycle == 20)
+    self.actions.push([name,cycle]);
+  };
+  self.tickCycle = function()
+  {
+    self.cycle++;
+    if (self.cycle == 100)
     {
-      this.speed--;
-      this.cycle = 0;
+      self.cycle = 0;
     }
-  },
-  this.react = function()
+  };
+  //A name will be returned when it reached the specificed cycle.
+  self.getEvent = function()
+  {
+    for (i = 0; i < self.actions.length;i++)
+    {
+      if (self.cycle == self.actions[i][1])
+      {
+        return self.actions[i][0];
+      }
+    };
+    return false;
+  };
+  self.react = function()
   {
     var new_time = new Date();
-    if (new_time - this.time >= this.speed)
+    if (new_time - self.time >= self.speed)
     {
-      this.time = new_time;
-      this.tickCycle();
+      self.time = new_time;
+      self.tickCycle();
+      self.eclipsed += 1; //As long as the speed is 1000, it'll be accurate
       return true;
     }
     return false;
-  },
-  this.reset = function()
+  };
+  self.reset = function()
   {
-    this.cycle = 0;
-    this.speed = 1000;
-  }
+    self.cycle = 0;
+  };
+  self.getSeconds = function()
+  {
+    return self.eclipsed;
+  };
 }
+
+//Deal with score keeping.
 function Score()
 {
   this.points = 0;
+  this.minimum = 0;
+  this.network = new ScoreNetwork(this);
+  this.network.initialize();
   this.increase = function()
   {
     this.points ++;
   },
+  this.changeMinimum = function(min)
+  {
+    if (min == false)
+    {
+      return false;
+    }
+    this.minimum = min;
+  }
   this.toString = function()
   {
     return "Score: " + this.points;
@@ -44,6 +425,18 @@ function Score()
   this.reset = function()
   {
     this.points = 0;
+  }
+  this.check = function()
+  {
+    if (this.minimum == false & this.points != 0)
+    {
+      return true;
+    }
+    else if (this.minimum < this.points && this.points != 0)
+    {
+      return true;
+    }
+    return false
   }
 }
 function PlayField()
@@ -636,6 +1029,14 @@ function TetrominoDraw()
   }
 }
 
+function Mode()
+{
+  this.status = 0;
+  this.change = function(n)
+  {
+    this.status = n;
+  }
+}
 void setup()
 {
   size(800,600);
@@ -644,7 +1045,8 @@ void setup()
   textFont(font,18);
   frameRate(24);
 }
-var status = true;
+var mode = new Mode();
+var score = new Score();
 var generator = new ShapeGenerator();
 var shape = new Tetromino();
 shape.change_shape(generator.current);
@@ -655,7 +1057,10 @@ var field = new PlayField();
 var drawShape = new TetrominoDraw();
 var drawField = new PlayFieldDraw();
 var timer = new TimerAction();
-var score = new Score();
+var board = new ScoreBoard(score);
+var score_data = new HighScore();
+timer.addAction("network",60);
+
 function cleanEvent()
 {
   shape.return_to_normal();
@@ -681,7 +1086,14 @@ function downEvent()
   {
     if (shape.y == 0)
     {
-      status = false;
+      if (score.check() == true)
+      {
+        mode.change(3);
+      }
+      else
+      {
+        mode.change(1);
+      }
     }
     insertEvent();
   }
@@ -706,9 +1118,20 @@ void drawInstruction()
   text("w - rotate",450,140);
 }
 
+//Workaround for HTTP connections being droped after two minutes. Tried many settings to keep the connection alive to no avail. However, constant sending every minute does seem to keep the connection alive. This bug may not affect machines outside of the original's developer.
+
+
+void sendAlive()
+{
+  if (timer.getEvent() == "network")
+  {
+    score.network.sendAlive();
+  }
+}
+
 void draw()
 {
-  if (status == true)
+  if (mode.status == 0)
   {
     if (timer.react())
     { 
@@ -718,7 +1141,7 @@ void draw()
       }
       downEvent();
     }
-    
+    sendAlive();
     background(0,0,0);
     stroke(205,201,201);
     fill(0,0,0);
@@ -736,59 +1159,28 @@ void draw()
     drawInstruction();
     drawShape.draw_field(field.field);
   }
-  else
+  else if(mode.status == 1)
   {
+    timer.react();
+    sendAlive();
     background(0,0,0);
     PFont font = loadFont("monospace");
     textFont(font,35);
     text("GAME OVER",300,300);
     textFont(font,18);
     text("Press n to start a new game.",250,325);
+    text("Press d to display highscore",250,350);
   }
-}
-
-void keyPressed()
-{
-  if (status == true)
+  else if(mode.status == 2)
   {
-    switch(key)
-    {
-    case 100:
-      shape.move(20,0);
-      checkEvent(-20,0);
-      break;
-    case 115:
-      shape.move(0,20);
-      downEvent();
-      break;
-    case 97:
-      shape.move(-20,0);
-      checkEvent(20,0);
-      break;
-    case 119:
-      shape.rotate();
-      if (checkEvent(0,0))
-      {
-        shape.rotate_backward();
-      }
-      break;
-    case 101:
-      generator.current = generator.getShape();
-      shape.change_shape(generator.current);
-      break;
-    default:
-      console.log(key);
-      break;
-    }
+    timer.react();
+    sendAlive();
+    board.display();
   }
-  else
+  else if(mode.status == 3)
   {
-    if (key == 110)
-    {
-      field.field = field.create_field();
-      status = true;
-      score.reset();
-      timer.reset();
-    }
+    timer.react();
+    sendAlive();
+    score_data.display();
   }
 }

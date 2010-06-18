@@ -3,10 +3,24 @@ if File.exist?("secret.rb")
   require 'secret.rb'
 end
 
+task :db => [:delete,:create]
 task :deploy => [:concat]
+task :copy => [:concat]
 task :concat do
   sh "rm game.js"
-  sh "cat app/models/timer_action.js app/models/score.js app/models/playfield.js app/models/playfield_draw.js app/models/tetromino.js app/models/j_shape.js app/models/i_shape.js app/models/l_shape.js app/models/o_shape.js app/models/z_shape.js app/models/s_shape.js app/models/t_shape.js app/models/shape_generator.js app/models/tetromino_draw.js app/modes/engine.js > game.js"
+  sh "cat client/models/restart_game.js client/models/scoreboard.js client/models/score_network.js client/models/high_score.js client/models/enter_score_key.js client/models/game_over_key.js client/models/key_pressed.js client/models/score_key.js client/models/game_key.js  client/models/timer_action.js client/models/score.js client/models/playfield.js client/models/playfield_draw.js client/models/tetromino.js client/models/j_shape.js client/models/i_shape.js client/models/l_shape.js client/models/o_shape.js client/models/z_shape.js client/models/s_shape.js client/models/t_shape.js client/models/shape_generator.js client/models/tetromino_draw.js client/modes/mode.js client/modes/engine.js > game.js"
+end
+
+task :copy do
+  sh "cp jstet.html /srv/http"
+  sh "cp game.js /srv/http"
+  sh "cp -r vendor /srv/http"
+end
+
+task :test do
+  sh "node test/delete.db.js"
+  sh "node test/create.db.js"
+  sh "node test/score.db.test.js"
 end
 
 task :deploy do
@@ -18,3 +32,19 @@ task :deploy do
   ftp.put("jstet.html")
   ftp.close()
 end
+<<<<<<< HEAD
+=======
+
+task :start do
+  sh "node server/server.js"
+end
+
+task :create do
+ sh "node server/create.js"
+end
+
+task :delete do
+ sh "node server/delete.js"
+end
+
+>>>>>>> kiba-master

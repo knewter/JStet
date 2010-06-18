@@ -7,7 +7,8 @@ void setup()
   textFont(font,18);
   frameRate(24);
 }
-var status = true;
+var mode = new Mode();
+var score = new Score();
 var generator = new ShapeGenerator();
 var shape = new Tetromino();
 shape.change_shape(generator.current);
@@ -18,7 +19,10 @@ var field = new PlayField();
 var drawShape = new TetrominoDraw();
 var drawField = new PlayFieldDraw();
 var timer = new TimerAction();
-var score = new Score();
+var board = new ScoreBoard(score);
+var score_data = new HighScore();
+timer.addAction("network",60);
+
 function cleanEvent()
 {
   shape.return_to_normal();
@@ -44,7 +48,14 @@ function downEvent()
   {
     if (shape.y == 0)
     {
-      status = false;
+      if (score.check() == true)
+      {
+        mode.change(3);
+      }
+      else
+      {
+        mode.change(1);
+      }
     }
     insertEvent();
   }
@@ -69,9 +80,20 @@ void drawInstruction()
   text("w - rotate",450,140);
 }
 
+//Workaround for HTTP connections being droped after two minutes. Tried many settings to keep the connection alive to no avail. However, constant sending every minute does seem to keep the connection alive. This bug may not affect machines outside of the original's developer.
+
+
+void sendAlive()
+{
+  if (timer.getEvent() == "network")
+  {
+    score.network.sendAlive();
+  }
+}
+
 void draw()
 {
-  if (status == true)
+  if (mode.status == 0)
   {
     if (timer.react())
     { 
@@ -81,7 +103,7 @@ void draw()
       }
       downEvent();
     }
-    
+    sendAlive();
     background(0,0,0);
     stroke(205,201,201);
     fill(0,0,0);
@@ -99,59 +121,28 @@ void draw()
     drawInstruction();
     drawShape.draw_field(field.field);
   }
-  else
+  else if(mode.status == 1)
   {
+    timer.react();
+    sendAlive();
     background(0,0,0);
     PFont font = loadFont("monospace");
     textFont(font,35);
     text("GAME OVER",300,300);
     textFont(font,18);
     text("Press n to start a new game.",250,325);
+    text("Press d to display highscore",250,350);
   }
-}
-
-void keyPressed()
-{
-  if (status == true)
+  else if(mode.status == 2)
   {
-    switch(key)
-    {
-    case 100:
-      shape.move(20,0);
-      checkEvent(-20,0);
-      break;
-    case 115:
-      shape.move(0,20);
-      downEvent();
-      break;
-    case 97:
-      shape.move(-20,0);
-      checkEvent(20,0);
-      break;
-    case 119:
-      shape.rotate();
-      if (checkEvent(0,0))
-      {
-        shape.rotate_backward();
-      }
-      break;
-    case 101:
-      generator.current = generator.getShape();
-      shape.change_shape(generator.current);
-      break;
-    default:
-      console.log(key);
-      break;
-    }
+    timer.react();
+    sendAlive();
+    board.display();
   }
-  else
+  else if(mode.status == 3)
   {
-    if (key == 110)
-    {
-      field.field = field.create_field();
-      status = true;
-      score.reset();
-      timer.reset();
-    }
+    timer.react();
+    sendAlive();
+    score_data.display();
   }
 }
