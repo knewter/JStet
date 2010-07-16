@@ -32,8 +32,6 @@ task :deploy do
   ftp.put("jstet.html")
   ftp.close()
 end
-<<<<<<< HEAD
-=======
 
 task :start do
   sh "node server/server.js"
@@ -46,5 +44,3 @@ end
 task :delete do
  sh "node server/delete.js"
 end
-
->>>>>>> kiba-master
