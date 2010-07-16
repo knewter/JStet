@@ -3,7 +3,7 @@ void gameOverKey()
 {
   if (key == 110)
   {
-    restartGame();
+    request_game();
   }
   else if(key == 100)
   {

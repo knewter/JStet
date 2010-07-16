@@ -1,13 +1,13 @@
 
-function ScoreBoard(score)
+function ScoreBoard(protocol)
 {
   var self = this;
-  self.score = score;
+  self.protocol = protocol;
   self.start = 0;
   self.turn = false;
   self.title = function()
   {
-    background(0,0,0)
+    background(0,0,0);
     PFont font = loadFont("monospace");
     textFont(font,18);
     text("HIGH SCORE LIST",250,50);
@@ -25,7 +25,7 @@ function ScoreBoard(score)
   };
   self.list = function()
   {
-    data = score.network.getData();
+    var data = self.protocol.getData();
     y = 70;
     limit = self.start + 20;
     self.turn = true;

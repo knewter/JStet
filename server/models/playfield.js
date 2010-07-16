@@ -1,14 +1,14 @@
 
 function PlayField()
 {
-  self = this;
+  var self = this;
   self.create_field = function()
   {
     var field = new Array(10);
-    for (x = 0; x < 10; x++)
+    for (var x = 0; x < 10; x++)
     {
       field[x] = new Array(20);
-      for (y = 0; y < 20; y++)
+      for (var y = 0; y < 20; y++)
       {
         field[x][y] = 0;
       }
@@ -40,7 +40,7 @@ function PlayField()
   //collision detection
   self.check = function(blocks,x_offset,y_offset)
   {
-    for (i = 0; i < 4; i++)
+    for (var i = 0; i < 4; i++)
     {
       if (self.field[blocks[i][0] + x_offset][blocks[i][1] + y_offset] != 0)
       {
@@ -49,14 +49,14 @@ function PlayField()
     }
     return true;
   };
-  //Add blocks to the field and encode color information
-  self.insert_blocks = function(blocks,c,r,color)
+  //Add blocks to the field.
+  self.insert_blocks = function(blocks,c,r)
   {
     var offset = self.calculate_positions(c,r);
-    var list = self.get_list(blocks);
+    var list = blocks;
     for (var i = 0; i < 4; i++)
     {
-      self.field[list[i][0] + offset[0]][list[i][1] + offset[1]] = color;
+      self.field[list[i][0] + offset[0]][list[i][1] + offset[1]] = 1;
     }
   };
   //move line down
@@ -66,9 +66,9 @@ function PlayField()
     {
       return false;
     }
-    for (y = line; y > 1; y--)
+    for (var y = line; y > 1; y--)
     {
-      for (x = 0; x < 10; x++)
+      for (var x = 0; x < 10; x++)
       {
         self.field[x][y] = self.field[x][y - 1]
       }
@@ -82,7 +82,7 @@ function PlayField()
     {
       return false;
     }
-    for (x = 0; x < 10; x++)
+    for (var x = 0; x < 10; x++)
     {
       self.field[x][line] = 0;
     }
@@ -92,10 +92,10 @@ function PlayField()
   {
     var line = 0;
     var score = 0;
-    for (y = 0; y < 20; y++)
+    for (var y = 0; y < 20; y++)
     {
       score = 0;
-      for (x = 0; x < 10; x++)
+      for (var x = 0; x < 10; x++)
       {
         if(self.field[x][y] != 0)
         {
@@ -115,4 +115,9 @@ function PlayField()
     return false;
   };
   self.field = self.create_field();
+}
+
+exports.get_field = function()
+{
+  return new PlayField();
 }

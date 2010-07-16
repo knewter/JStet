@@ -1,4 +1,84 @@
 
+function Engine(protocol,mode)
+{
+  var self = this;
+  self.protocol = protocol;
+  self.mode = mode;
+  protocol.engine = self;
+  self.current = new Tetromino();
+  self.future = new Tetromino();
+  self.field = new PlayField();
+  self.score = 0;
+  self.write_shape = function(name,choice,type)
+  {
+    if (type == 0)
+    {
+      if (self.current.shape != null)
+      {
+        self.field.insert_blocks(self.current.get_list(),self.current.x,self.current.y,self.current.shape.color);
+      }
+      self.current.return_to_zero();
+      self.current.change_shape(getShape(name));
+      self.current.draw = true;
+    }
+    else if (type == 1)
+    {
+      self.future.change_shape(getShape(name));
+      self.future.choice = choice;
+      self.future.update_shape();
+      self.future.draw = true;
+      self.change == false;
+    }
+    
+  };
+  //Update location.
+  self.update_location = function(x,y)
+  {
+    self.current.x = x;
+    self.current.y = y;
+  };
+  self.move = function(x,y)
+  {
+    self.current.move(x,y)
+    var offset = self.field.calculate_positions(self.current.x,self.current.y);
+    if (self.field.check(self.current.get_list(),offset[0],offset[1]) == false)
+    {
+      self.current.move(-x,-y);
+    }
+  };
+  self.rotate = function(choice)
+  {
+    self.current.rotate(choice);
+  };
+  self.line_action = function(line)
+  {
+    self.field.move_lines(self.field.clear_line(line));
+  };
+  self.stop = function()
+  {
+    console.log("Game over");
+    self.mode.change(1);
+  };
+  self.high_score = function()
+  {
+    console.log("High score, detected!");
+    self.mode.change(3);
+  };
+  self.start = function()
+  {
+    self.current = new Tetromino();
+    self.future = new Tetromino();
+    self.field.start();
+  };
+};
+
+void request_game()
+{
+  mode.change(4);
+  engine.start();
+  game_protocol.request_game();
+}
+
 void setup()
 {
   size(800,600);
@@ -8,68 +88,19 @@ void setup()
   frameRate(24);
 }
 var mode = new Mode();
-var score = new Score();
-var generator = new ShapeGenerator();
-var shape = new Tetromino();
-shape.change_shape(generator.current);
-var future = new Tetromino();
-generator.getShape();
-future.change_shape(generator.current);
-var field = new PlayField();
 var drawShape = new TetrominoDraw();
 var drawField = new PlayFieldDraw();
 var timer = new TimerAction();
-var board = new ScoreBoard(score);
 var score_data = new HighScore();
+var network = new Net();
+var over = new GameOver();
+var title = new TitleScreen();
+network.initialize();
+var game_protocol = new GameProtocol(network);
+var score_protocol = new ScoreProtocol(network);
+var board = new ScoreBoard(score_protocol)
 timer.addAction("network",60);
-
-function cleanEvent()
-{
-  shape.return_to_normal();
-  shape.change_shape(generator.current);
-  generator.current = generator.getShape();
-  future.change_shape(generator.current);
-}
-
-function checkEvent(x,y)
-{
-  var offset = field.calculate_positions(shape.x,shape.y);
-  if (field.check(field.get_list(shape.blocks),offset[0],offset[1]) == false)  
-  {
-    shape.move(x,y);
-    return true;
-  }
-  return false;
-}
-
-function downEvent()
-{
-  if (checkEvent(0,-20))
-  {
-    if (shape.y == 0)
-    {
-      if (score.check() == true)
-      {
-        mode.change(3);
-      }
-      else
-      {
-        mode.change(1);
-      }
-    }
-    insertEvent();
-  }
-}
-
-function insertEvent()
-{
-  field.insert_blocks(shape.blocks,shape.x,shape.y,shape.shape.color);
-  cleanEvent();
-  while (field.move_lines(field.clear_line(field.check_field())))
-  {
-    score.increase();
-  }
-}
+var engine = new Engine(game_protocol,mode);
 
 void drawInstruction()
 {
@@ -83,66 +114,58 @@ void drawInstruction()
 //Workaround for HTTP connections being droped after two minutes. Tried many settings to keep the connection alive to no avail. However, constant sending every minute does seem to keep the connection alive. This bug may not affect machines outside of the original's developer.
 
 
+void gameDisplay()
+{
+  background(0,0,0);
+  stroke(205,201,201);
+  fill(0,0,0);
+  rect(drawField.x,drawField.y,drawField.width,drawField.height)
+  stroke(255,255,255);
+  fill(255,255,255);
+  if (engine.current.draw == true)
+  {
+    drawShape.create_blocks(engine.current.get_list(),engine.current.x,engine.current.y,engine.current.shape.color);
+    text("Current: ",300,135);
+    drawShape.create_blocks(engine.current.get_list(),250,100,engine.current.shape.color);
+  }
+  text("Next: ", 300,250);
+  if (engine.future.draw == true)
+  {
+    drawShape.create_blocks(engine.future.get_list(),250,210,engine.future.shape.color);
+  }
+  text("Score " + engine.score,300,50);
+  drawInstruction();
+  drawShape.draw_field(engine.field.field);
+}
+
 void sendAlive()
 {
   if (timer.getEvent() == "network")
   {
-    score.network.sendAlive();
+    network.sendAlive();
   }
 }
 
 void draw()
 {
-  if (mode.status == 0)
+  timer.react();
+  sendAlive();
+  switch(mode.status)
   {
-    if (timer.react())
-    { 
-      if (shape.move(0,20) == 2)
-      {
-        insertEvent();
-      }
-      downEvent();
-    }
-    sendAlive();
-    background(0,0,0);
-    stroke(205,201,201);
-    fill(0,0,0);
-    rect(drawField.x,drawField.y,drawField.width,drawField.height)
-    stroke(255,255,255);
-    fill(255,255,255);
-    drawShape.create_blocks(shape.get_list(),shape.x,shape.y,shape.shape.color);
-    text("Current: ",300,135);
-    current = new Tetromino();
-    current.change_shape(shape.shape);
-    drawShape.create_blocks(current.get_list(),250,100,current.shape.color);
-    text("Next: ", 300,250);
-    drawShape.create_blocks(future.get_list(),250,210,future.shape.color);
-    text(score.toString(),300,50);
-    drawInstruction();
-    drawShape.draw_field(field.field);
-  }
-  else if(mode.status == 1)
-  {
-    timer.react();
-    sendAlive();
-    background(0,0,0);
-    PFont font = loadFont("monospace");
-    textFont(font,35);
-    text("GAME OVER",300,300);
-    textFont(font,18);
-    text("Press n to start a new game.",250,325);
-    text("Press d to display highscore",250,350);
-  }
-  else if(mode.status == 2)
-  {
-    timer.react();
-    sendAlive();
+  case 0:
+    title.display();
+    break;
+  case 4:
+    gameDisplay();
+    break;
+  case 1:
+    over.display();
+    break;
+  case 2:
     board.display();
-  }
-  else if(mode.status == 3)
-  {
-    timer.react();
-    sendAlive();
+    break;
+  case 3:
     score_data.display();
+    break;
   }
 }

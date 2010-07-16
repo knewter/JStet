@@ -1,7 +1,0 @@
-
-
-function GameProtcol()
-{
-  self = this;
-  
-}

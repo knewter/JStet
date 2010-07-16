@@ -4,10 +4,10 @@ function PlayField()
   this.create_field = function()
   {
     var field = new Array(10);
-    for (x = 0; x < 10; x++)
+    for (var x = 0; x < 10; x++)
     {
       field[x] = new Array(20);
-      for (z = 0; z < 20; z++)
+      for (var z = 0; z < 20; z++)
       {
         field[x][z] = 0;
       }
@@ -23,9 +23,9 @@ function PlayField()
   this.get_list = function(blocks)
   {
     var coord = new Array();
-    for (int x = 0; x < 4; x++)
+    for (var x = 0; x < 4; x++)
     {
-      for (int y = 0; y < 4; y++)
+      for (var y = 0; y < 4; y++)
       {
         if(blocks[x][y] == 1)
         {
@@ -37,7 +37,7 @@ function PlayField()
   }
   this.check = function(blocks,x_offset,y_offset)
   {
-    for (int i = 0; i < 4; i++)
+    for (var i = 0; i < 4; i++)
     {
       if (this.field[blocks[i][0] + x_offset][blocks[i][1] + y_offset] != 0)
       {
@@ -46,11 +46,11 @@ function PlayField()
     }
     return true;
   },
- this.insert_blocks = function(blocks,c,r,color)
+  this.insert_blocks = function(blocks,c,r,color)
   {
     var offset = this.calculate_positions(c,r);
-    var list = this.get_list(blocks);
-    for (int i = 0; i < 4; i ++)
+    var list = blocks;
+    for (var i = 0; i < 4; i ++)
     {
       this.field[list[i][0] + offset[0]][list[i][1] + offset[1]] = color;
     }
@@ -61,9 +61,9 @@ function PlayField()
     {
       return false;
     }
-    for (int y = line; y > 1; y--)
+    for (var y = line; y > 1; y--)
     {
-      for (int x = 0; x < 10; x++)
+      for (var x = 0; x < 10; x++)
       {
         this.field[x][y] = this.field[x][y - 1];
       }
@@ -76,7 +76,7 @@ function PlayField()
     {
       return false;
     }
-    for (int x = 0; x < 10; x++)
+    for (var x = 0; x < 10; x++)
     {
       this.field[x][line] = 0;
     }
@@ -89,7 +89,7 @@ function PlayField()
     for (int y = 0; y < 20; y++)
     {
       score = 0;
-      for (int x = 0; x < 10; x++)
+      for (var x = 0; x < 10; x++)
       {
         if (this.field[x][y] != 0)
         {
@@ -108,5 +108,8 @@ function PlayField()
     }
     return false;
   }
-  this.field = this.create_field();
+  this.start = function()
+  {
+    this.field = this.create_field();
+  }
 }

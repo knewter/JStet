@@ -5,7 +5,7 @@ void scoreKey()
   {
   //n is restart the game
   case 110:
-    restartGame();
+    request_game();
     break;
   //j, view previous page
   case 106:

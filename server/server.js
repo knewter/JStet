@@ -1,17 +1,31 @@
 var sys = require('sys');
 var ws = require('../vendor/ws/ws');
-
+var game = require('./protocols/game_protocol')
 
 
 //server stuff
-var db = require('./models/database')
+var db = require('./models/database');
 //start of actual server code.
 var server = ws.createServer();
+var players = new Array();
 server.listen(7000);
+
+function destroy(id)
+{
+  for (var i = 0;i < players.length;i++)
+  {
+    if (players[i] == id)
+    {
+      players.splice(i,1);
+    }
+  }
+  game.destroy(id);
+}
 
 function sendData()
 {
-  server.broadcast(JSON.stringify(db.getDoc()));
+  data = [0,db.getDoc()];
+  server.broadcast(JSON.stringify(data));
 }
 
 server.addListener("listening",function(){
@@ -23,34 +37,56 @@ server.addListener("listening",function(){
 
 server.addListener("connection",function(conn){
   sys.log("<"+conn._id+"> connected");
+  players.push(conn._id);
   sendData();
   conn.addListener("close",function(){
     db.save();
+    game.destroy(conn._id);
     sys.log("<"+conn._id+"> onClose");
   });
   
   conn.addListener("message",function(event){
-    //data[0] notates data types so we know how to process the data. 
+    //data[0] notates data types so we know how to process the data.
+    //0 - Score
+    //1 - Client status
+    //2 - Game
     data = JSON.parse(event);
-    if (data[0] == 0)
+    switch(data[0])
     {
-      db.add_to_list(data[1],data[2]);
+    case 0:
+      db.add_to_list(data[1],game.get_score(conn._id));
+      game.destroy(conn._id);
       sendData();
       db.save();
-    }
-    else if(data[0] == 1)
-    {
-      sys.log("<"+conn._id+"> is still alive!");
-    }
-    else if(data[0] == 2)
-    {
-      sys.log("gameplay commands");
+      break;
+    case 2:
+      game.process(data,conn._id);
+      break;
+    case 3:
+      game.destroy(conn._id);
+      break;
     }
   });
 
   conn.addListener("error",function(event){
     sys.log(event);
   });
+
+  setInterval(function() {
+    for (var i = 0; i < players.length; i++)
+    {
+      events = game.get_data(players[i]);
+      if (events != false)
+      {
+	if (events.length != 0)
+	{
+	  for (var a = 0;a < events.length;a++)
+	  {
+	    var message = JSON.stringify(events[a]);
+	    server.send(players[i],message);
+	  }
+	}
+      }
+    }
+  }, 10);
 });
-
-

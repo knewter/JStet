@@ -1,5 +1,4 @@
-
-function TimerAction()
+function Timer()
 {
   var self = this;
   self.eclipsed = 0;
@@ -51,4 +50,10 @@ function TimerAction()
   {
     return self.eclipsed;
   };
+}
+
+
+exports.create_new = function()
+{
+  return new Timer();
 }

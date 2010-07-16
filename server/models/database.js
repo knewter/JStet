@@ -10,7 +10,7 @@ var document =
     status: false
   }
 
-for (i = 0; i < 100; i++)
+for (var i = 0; i < 100; i++)
 {
   document.names[i] = "nothing";
   document.scores[i] = 0;
@@ -35,7 +35,7 @@ function moveList(n)
 
 exports.add_to_list = function(name,points)
 {
-  for (n = 0; n < 100; n++)
+  for (var n = 0; n < 100; n++)
   {
     if (document.names[n] == "nothing")
     {
@@ -51,6 +51,23 @@ exports.add_to_list = function(name,points)
       return;
     }
   } 
+}
+
+
+exports.get_lowest = function(points)
+{
+  for (var i = 0;i < 100;i++)
+  {
+    if (document.names[i] == "nothing")
+    {
+      return document.scores[i];
+    }
+    else if(document.scores[i] < points)
+    {
+      return document.scores[i];
+    }
+  }
+  return document.scores[i];
 }
 
 exports.create = function()
